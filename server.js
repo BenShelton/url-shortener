@@ -8,10 +8,10 @@ const mongoUrl = process.env.MONGODB_URI;
 
 // server & db setup
 const app = express();
-const MongoClient = mongodb.MongoClient;
+var col, lastRef;
 
 // connect to the server
-MongoClient.connect(mongoUrl, (err, db) => {
+mongodb.MongoClient.connect(mongoUrl, (err, db) => {
   // handle error
   if (err) return console.log('Unable to connect to the mongoDB server. Error: ' + err);
 
@@ -19,29 +19,66 @@ MongoClient.connect(mongoUrl, (err, db) => {
   console.log('Connection established to mongoDB');
   
   // select collection
-  var col = db.collection('urls');
+  col = db.collection('urls');
   
+  // find last used ref
+  col.find().sort({ref: -1}).toArray((err, doc) => {
+    if (err) return console.log(err);
+    lastRef = doc[0] ? doc[0].ref : 0;
+  });
   
-
-  // close connection
-  db.close();
 });
 
 // setup static files
 app.use(express.static(__dirname + '/public'));
 
 // routing
+// url expansion
+app.get('/:ref', (req, res) => {
+  // search db for reference
+  var search = {ref: Number(req.params.ref)};
+  col.find(search).toArray((err, data) => {
+    // if err or data not found return JSON error
+    if (err || !data[0]) {
+      res.json({error: 'Invalid Shortened URL'});
+    // if data found, redirect
+    } else {
+      res.redirect(data[0].fullUrl);
+    }
+  });
+});
+
+// add new url
 app.get('/new/:url(*)', (req, res) => {
   var input = req.params.url;
   // test URL against RegExp
   var re = /^https?:\/\/\w*\.\w*/;
   if (re.test(input)) {
-    var output = 'Short';
-    res.json({
-      result: 'Website Registered',
-      short_url: output,
-      original_url: input
-      });
+    // create doc to add
+    var data = {
+      fullUrl: input,
+      ref: ++lastRef
+    };
+    // add doc
+    col.insert(data, (err, doc) => {
+      // if error return JSON error
+      if (err) {
+        console.log(err);
+        res.json({
+          result: 'Website Not Registered',
+          error: 'Database Error',
+          original_url: input
+        }); 
+      // if doc added return JSON URLs
+      } else {
+        res.json({
+          result: 'Website Registered',
+          short_url: 'https://frozen-dusk-72112.herokuapp.com/' + doc.ops[0].ref,
+          original_url: input
+        });
+      }
+    });
+  // if invalid URL entered return JSON error
   } else {
     res.json({
       result: 'Website Not Registered',
