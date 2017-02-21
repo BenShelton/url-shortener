@@ -5,16 +5,20 @@
   <meta name="viewport"
      content="width=device-width, initial-scale=1, user-scalable=yes">
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+  <title>URL Shortener Microservice</title>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1>Header Parser Microservice</h1>
+    <h1>URL Shortener Microservice</h1>
     <hr />
     <h3>Usage</h3>
-    <p>Go to the /whoami page: <a href="/whoami">Quick Link</a></p>
-    <p>You will receive a JSON response with some details that were sent by your browser:</p>
-    <p><code>"ipaddress": "192.168.0.1", "language": "en-US", "software": "Windows NT 10.0; Win64; x64"</code></p>
+    <p>To create a shortened URL append /new/ followed by the URL you want to shorten:</p>
+    <p><code>https://frozen-dusk-72112.herokuapp.com/new/https://www.google.com</code></p>
+    <p>You will receive a JSON response with the original and shortened URL:</p>
+    <p><code>{"original_url":"https://www.google.com", "short_url":"https://frozen-dusk-72112.herokuapp.com/1"
+    }</code></p>
+    <p>Using the shortened URL will direct you to the original page.</p>
   </div>
 </body>
 </html>
